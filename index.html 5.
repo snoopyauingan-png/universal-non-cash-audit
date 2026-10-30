@@ -1,0 +1,276 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal Non-Cash Audit</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f5fa;
+      color: #17243a;
+    }
+
+    .container {
+      max-width: 440px;
+      margin: 65px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 5px 25px #00000012;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 42px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 23px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #718096;
+      font-size: 13px;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin: 8px 0;
+      border: 1px solid #dce3ed;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #153e75;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #e8eef7;
+      color: #153e75;
+    }
+
+    button:hover { opacity: .9; }
+
+    #message {
+      margin-top: 15px;
+      font-size: 13px;
+      text-align: center;
+      color: #c0392b;
+    }
+
+    #dashboard {
+      display: none;
+      max-width: 900px;
+      margin: 35px auto;
+      padding: 25px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .header button {
+      width: auto;
+      padding: 10px 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 3px 15px #0000000c;
+    }
+
+    .card h3 {
+      font-size: 13px;
+      color: #718096;
+    }
+
+    .card strong {
+      font-size: 27px;
+    }
+
+    .welcome {
+      background: #153e75;
+      color: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-top: 25px;
+    }
+
+    .welcome p { color: #dce8f8; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" id="loginBox">
+    <div class="logo">📊</div>
+    <h1>UNIVERSAL NON-CASH AUDIT</h1>
+    <div class="subtitle">
+      Transaction Verification & Reconciliation System
+    </div>
+
+    <input id="email" type="email"
+      placeholder="Email Address" autocomplete="email">
+
+    <input id="password" type="password"
+      placeholder="Password" autocomplete="current-password">
+
+    <button onclick="login()">LOGIN</button>
+    <button class="secondary" onclick="register()">
+      CREATE ACCOUNT
+    </button>
+
+    <div id="message"></div>
+  </div>
+
+  <div id="dashboard">
+    <div class="header">
+      <div>
+        <h2>UNIVERSAL NON-CASH AUDIT</h2>
+        <small>Audit Management Dashboard</small>
+      </div>
+      <button onclick="logout()">LOGOUT</button>
+    </div>
+
+    <div class="welcome">
+      <h2>Welcome to your Audit System!</h2>
+      <p id="userEmail"></p>
+      <p>Your account is successfully connected.</p>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>POS Transactions</h3>
+        <strong>0</strong>
+      </div>
+
+      <div class="card">
+        <h3>Verified Payments</h3>
+        <strong>0</strong>
+      </div>
+
+      <div class="card">
+        <h3>Unmatched Transactions</h3>
+        <strong>0</strong>
+      </div>
+
+      <div class="card">
+        <h3>For Investigation</h3>
+        <strong>0</strong>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <h3>System Modules</h3>
+      <p>📄 POS Receipt Scanning — Coming next</p>
+      <p>💳 Payment Terminal Verification — Coming next</p>
+      <p>🔍 Automatic Transaction Matching — Coming next</p>
+      <p>📊 Audit Reports — Coming next</p>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAhPZKZBfkKsa8k4_b1MRzoGNx5wZrA6IA",
+      authDomain: "universal-non-cash-audit.firebaseapp.com",
+      projectId: "universal-non-cash-audit",
+      storageBucket: "universal-non-cash-audit.firebasestorage.app",
+      messagingSenderId: "578622646211",
+      appId: "1:578622646211:web:b6c1f4f43a3417da87ff76",
+      measurementId: "G-0RETCHWJKQ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function showMessage(message) {
+      document.getElementById("message").textContent = message;
+    }
+
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showMessage("Please enter your email and password.");
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(error => showMessage(error.message));
+    }
+
+    function register() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        showMessage("Enter your email and password first.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showMessage("Password must have at least 6 characters.");
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .catch(error => showMessage(error.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        document.getElementById("userEmail").textContent = user.email;
+      } else {
+        document.getElementById("loginBox").style.display = "block";
+        document.getElementById("dashboard").style.display = "none";
+      }
+    });
+  </script>
+
+</body>
+</html>
