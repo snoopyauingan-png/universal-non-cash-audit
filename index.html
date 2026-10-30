@@ -2,275 +2,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universal Non-Cash Audit</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universal Non-Cash Audit</title>
 
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f5fa;
-      color: #17243a;
-    }
-
-    .container {
-      max-width: 440px;
-      margin: 65px auto;
-      padding: 30px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 5px 25px #00000012;
-    }
-
-    .logo {
-      text-align: center;
-      font-size: 42px;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 23px;
-      margin-bottom: 8px;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: #718096;
-      font-size: 13px;
-      margin-bottom: 25px;
-    }
-
-    input {
-      width: 100%;
-      padding: 13px;
-      margin: 8px 0;
-      border: 1px solid #dce3ed;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-
-    button {
-      width: 100%;
-      padding: 13px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #153e75;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #e8eef7;
-      color: #153e75;
-    }
-
-    button:hover { opacity: .9; }
-
-    #message {
-      margin-top: 15px;
-      font-size: 13px;
-      text-align: center;
-      color: #c0392b;
-    }
-
-    #dashboard {
-      display: none;
-      max-width: 900px;
-      margin: 35px auto;
-      padding: 25px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .header button {
-      width: auto;
-      padding: 10px 20px;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 15px;
-      margin-top: 25px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 22px;
-      box-shadow: 0 3px 15px #0000000c;
-    }
-
-    .card h3 {
-      font-size: 13px;
-      color: #718096;
-    }
-
-    .card strong {
-      font-size: 27px;
-    }
-
-    .welcome {
-      background: #153e75;
-      color: white;
-      border-radius: 14px;
-      padding: 25px;
-      margin-top: 25px;
-    }
-
-    .welcome p { color: #dce8f8; }
-  </style>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#17243a}
+.container{max-width:440px;margin:55px auto;padding:28px;background:white;border-radius:15px;box-shadow:0 5px 25px #0001}
+h1{text-align:center;font-size:23px}
+.subtitle{text-align:center;color:#718096;font-size:13px;margin-bottom:25px}
+input,select{width:100%;padding:12px;margin:7px 0;border:1px solid #dce3ed;border-radius:8px;font-size:15px}
+button{padding:12px 16px;border:0;border-radius:8px;background:#153e75;color:white;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+.full{width:100%;margin-top:10px}
+.secondary{background:#e8eef7;color:#153e75}
+#message{margin-top:14px;text-align:center;font-size:13px;color:#c0392b}
+#dashboard{display:none;max-width:1050px;margin:25px auto;padding:20px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.header button{width:auto}
+.welcome{background:#153e75;color:white;padding:22px;border-radius:13px;margin:20px 0}
+.welcome p{color:#dce8f8}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:20px 0}
+.card{background:white;border-radius:12px;padding:20px;box-shadow:0 3px 15px #0000000c;margin-bottom:16px}
+.card h3{font-size:14px;color:#718096}
+.number{font-size:28px;font-weight:bold}
+.company{border:1px solid #e1e7ef;border-radius:9px;padding:15px;margin-top:10px}
+.company strong{font-size:16px}
+.status{font-size:12px;padding:5px 9px;border-radius:20px;background:#e5f5e9;color:#237a3b}
+.inactive{background:#fce8e8;color:#a52a2a}
+.small{font-size:12px;color:#718096}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:600px){.formgrid{grid-template-columns:1fr}}
+</style>
 </head>
 
 <body>
 
-  <div class="container" id="loginBox">
-    <div class="logo">📊</div>
-    <h1>UNIVERSAL NON-CASH AUDIT</h1>
-    <div class="subtitle">
-      Transaction Verification & Reconciliation System
+<div class="container" id="loginBox">
+  <div style="text-align:center;font-size:42px">📊</div>
+  <h1>UNIVERSAL NON-CASH AUDIT</h1>
+  <div class="subtitle">Transaction Verification & Reconciliation System</div>
+
+  <input id="email" type="email" placeholder="Email Address">
+  <input id="password" type="password" placeholder="Password">
+  <button class="full" onclick="login()">LOGIN</button>
+  <button class="full secondary" onclick="register()">CREATE ACCOUNT</button>
+  <div id="message"></div>
+</div>
+
+<div id="dashboard">
+
+  <div class="header">
+    <div>
+      <h2>UNIVERSAL NON-CASH AUDIT</h2>
+      <small>SUPER ADMIN MANAGEMENT</small>
     </div>
-
-    <input id="email" type="email"
-      placeholder="Email Address" autocomplete="email">
-
-    <input id="password" type="password"
-      placeholder="Password" autocomplete="current-password">
-
-    <button onclick="login()">LOGIN</button>
-    <button class="secondary" onclick="register()">
-      CREATE ACCOUNT
-    </button>
-
-    <div id="message"></div>
+    <button onclick="logout()">LOGOUT</button>
   </div>
 
-  <div id="dashboard">
-    <div class="header">
-      <div>
-        <h2>UNIVERSAL NON-CASH AUDIT</h2>
-        <small>Audit Management Dashboard</small>
-      </div>
-      <button onclick="logout()">LOGOUT</button>
+  <div class="welcome">
+    <h2>Welcome, System Owner!</h2>
+    <p id="userEmail"></p>
+    <p>Manage your registered companies and audit system.</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>REGISTERED COMPANIES</h3>
+      <div class="number" id="companyCount">0</div>
     </div>
-
-    <div class="welcome">
-      <h2>Welcome to your Audit System!</h2>
-      <p id="userEmail"></p>
-      <p>Your account is successfully connected.</p>
-    </div>
-
-    <div class="cards">
-      <div class="card">
-        <h3>POS Transactions</h3>
-        <strong>0</strong>
-      </div>
-
-      <div class="card">
-        <h3>Verified Payments</h3>
-        <strong>0</strong>
-      </div>
-
-      <div class="card">
-        <h3>Unmatched Transactions</h3>
-        <strong>0</strong>
-      </div>
-
-      <div class="card">
-        <h3>For Investigation</h3>
-        <strong>0</strong>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:20px">
-      <h3>System Modules</h3>
-      <p>📄 POS Receipt Scanning — Coming next</p>
-      <p>💳 Payment Terminal Verification — Coming next</p>
-      <p>🔍 Automatic Transaction Matching — Coming next</p>
-      <p>📊 Audit Reports — Coming next</p>
+    <div class="card">
+      <h3>ACTIVE COMPANIES</h3>
+      <div class="number" id="activeCount">0</div>
     </div>
   </div>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <div class="card">
+    <h2>🏢 Register New Company</h2>
+    <p class="small">Add a business or organization to the audit system.</p>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAhPZKZBfkKsa8k4_b1MRzoGNx5wZrA6IA",
-      authDomain: "universal-non-cash-audit.firebaseapp.com",
-      projectId: "universal-non-cash-audit",
-      storageBucket: "universal-non-cash-audit.firebasestorage.app",
-      messagingSenderId: "578622646211",
-      appId: "1:578622646211:web:b6c1f4f43a3417da87ff76",
-      measurementId: "G-0RETCHWJKQ"
-    };
+    <input id="companyName" placeholder="Company Name">
+    <div class="formgrid">
+      <input id="companyCode" placeholder="Company Code">
+      <select id="industry">
+        <option value="">Select Industry</option>
+        <option>Restaurant / Food Service</option>
+        <option>Retail / Grocery</option>
+        <option>Salon / Beauty</option>
+        <option>Hotel / Accommodation</option>
+        <option>Clinic / Healthcare</option>
+        <option>Other Services</option>
+        <option>Other Business</option>
+      </select>
+    </div>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    <button class="full" onclick="addCompany()">REGISTER COMPANY</button>
+    <div id="companyMessage"></div>
+  </div>
 
-    function showMessage(message) {
-      document.getElementById("message").textContent = message;
+  <div class="card">
+    <h2>📋 Registered Companies</h2>
+    <div id="companyList">Loading companies...</div>
+  </div>
+
+  <div class="card">
+    <h3>UPCOMING AUDIT MODULES</h3>
+    <p>📄 POS Receipt Scanning</p>
+    <p>💳 Payment Terminal Verification</p>
+    <p>🔍 Automatic Transaction Matching</p>
+    <p>📊 Audit Reports</p>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAhPZKZBfkKsa8k4_b1MRzoGNx5wZrA6IA",
+  authDomain: "universal-non-cash-audit.firebaseapp.com",
+  projectId: "universal-non-cash-audit",
+  storageBucket: "universal-non-cash-audit.firebasestorage.app",
+  messagingSenderId: "578622646211",
+  appId: "1:578622646211:web:b6c1f4f43a3417da87ff76",
+  measurementId: "G-0RETCHWJKQ"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const SUPER_ADMIN_UID = "UPE192w6H5ekHSv0hQKjHITqsZ62";
+
+function showMessage(message){
+  document.getElementById("message").textContent = message;
+}
+
+function showCompanyMessage(message, color){
+  const el = document.getElementById("companyMessage");
+  el.textContent = message;
+  el.style.color = color || "#c0392b";
+}
+
+function login(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    showMessage("Please enter your email and password.");
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email,password)
+    .catch(error => showMessage(error.message));
+}
+
+function register(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    showMessage("Enter your email and password first.");
+    return;
+  }
+
+  if(password.length < 6){
+    showMessage("Password must have at least 6 characters.");
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(email,password)
+    .catch(error => showMessage(error.message));
+}
+
+function logout(){
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  if(!user){
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+    return;
+  }
+
+  if(user.uid !== SUPER_ADMIN_UID){
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("dashboard").style.display = "none";
+    showMessage("This account is not authorized as SUPER ADMIN.");
+    auth.signOut();
+    return;
+  }
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  document.getElementById("userEmail").textContent = user.email;
+
+  loadCompanies();
+});
+
+async function addCompany(){
+  const name = document.getElementById("companyName").value.trim();
+  const code = document.getElementById("companyCode").value.trim().toUpperCase();
+  const industry = document.getElementById("industry").value;
+
+  if(!auth.currentUser || auth.currentUser.uid !== SUPER_ADMIN_UID){
+    showCompanyMessage("Unauthorized account.");
+    return;
+  }
+
+  if(!name || !code || !industry){
+    showCompanyMessage("Please complete all company fields.");
+    return;
+  }
+
+  if(!/^[A-Z0-9_-]{2,20}$/.test(code)){
+    showCompanyMessage("Company code: use 2-20 letters, numbers, hyphens or underscores.");
+    return;
+  }
+
+  try{
+    const existing = await db.collection("companies")
+      .where("companyCode","==",code).get();
+
+    if(!existing.empty){
+      showCompanyMessage("Company code already exists.");
+      return;
     }
 
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        showMessage("Please enter your email and password.");
-        return;
-      }
-
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(error => showMessage(error.message));
-    }
-
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        showMessage("Enter your email and password first.");
-        return;
-      }
-
-      if (password.length < 6) {
-        showMessage("Password must have at least 6 characters.");
-        return;
-      }
-
-      auth.createUserWithEmailAndPassword(email, password)
-        .catch(error => showMessage(error.message));
-    }
-
-    function logout() {
-      auth.signOut();
-    }
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
-        document.getElementById("userEmail").textContent = user.email;
-      } else {
-        document.getElementById("loginBox").style.display = "block";
-        document.getElementById("dashboard").style.display = "none";
-      }
+    await db.collection("companies").add({
+      companyName: name,
+      companyCode: code,
+      industry: industry,
+      status: "ACTIVE",
+      createdBy: auth.currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  </script>
 
+    document.getElementById("companyName").value = "";
+    document.getElementById("companyCode").value = "";
+    document.getElementById("industry").value = "";
+
+    showCompanyMessage("Company successfully registered!", "#237a3b");
+    loadCompanies();
+
+  }catch(error){
+    showCompanyMessage("Unable to save company: " + error.message);
+  }
+}
+
+async function loadCompanies(){
+  const list = document.getElementById("companyList");
+  list.textContent = "Loading companies...";
+
+  try{
+    const snapshot = await db.collection("companies")
+      .orderBy("createdAt","desc").get();
+
+    let active = 0;
+    list.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const company = doc.data();
+
+      if(company.status === "ACTIVE") active++;
+
+      const item = document.createElement("div");
+      item.className = "company";
+
+      const title = document.createElement("strong");
+      title.textContent = company.companyName || "Unnamed Company";
+
+      const badge = document.createElement("span");
+      badge.className = company.status === "ACTIVE"
+        ? "status" : "status inactive";
+      badge.style.marginLeft = "10px";
+      badge.textContent = company.status || "UNKNOWN";
+
+      const details = document.createElement("p");
+      details.className = "small";
+      details.textContent =
+        "Code: " + (company.companyCode || "-") +
+        " | Industry: " + (company.industry || "-");
+
+      item.appendChild(title);
+      item.appendChild(badge);
+      item.appendChild(details);
+      list.appendChild(item);
+    });
+
+    if(snapshot.empty){
+      list.textContent = "No companies registered yet.";
+    }
+
+    document.getElementById("companyCount").textContent = snapshot.size;
+    document.getElementById("activeCount").textContent = active;
+
+  }catch(error){
+    list.textContent = "Unable to load companies: " + error.message;
+  }
+}
+</script>
 </body>
 </html>
