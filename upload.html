@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Universal Non-Cash Audit</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f4f8;
+      color: #243247;
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 25px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 18px #00000012;
+    }
+
+    h2 { text-align: center; margin-bottom: 5px; }
+
+    .subtitle {
+      text-align: center;
+      color: #687789;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccd4df;
+      border-radius: 8px;
+      background: white;
+      font-size: 15px;
+    }
+
+    .upload-card {
+      border: 1px solid #dce3ec;
+      border-radius: 10px;
+      padding: 14px;
+      margin-top: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #173d70;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: .6; }
+
+    .note {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff7df;
+      color: #70551a;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #message {
+      margin-top: 18px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    .progress {
+      height: 8px;
+      background: #e8eef5;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 18px;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: #2877c7;
+      transition: width .3s;
+    }
+
+    .result {
+      background: #eef6ff;
+      border-radius: 9px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .small {
+      color: #687789;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <h2>UNIVERSAL NON-CASH AUDIT</h2>
+  <div class="subtitle">POS & Terminal Receipt Scanner</div>
+
+  <form id="auditForm">
+
+    <label for="storeCode">Store Code</label>
+    <input id="storeCode" type="text"
+      placeholder="Enter store code" required>
+
+    <div class="upload-card">
+      <label for="posFile">1. POS Receipt</label>
+      <input id="posFile" type="file"
+        accept="image/*,application/pdf" required>
+    </div>
+
+    <div class="upload-card">
+      <label for="terminalFile">2. MAYA / Debit Receipt</label>
+      <input id="terminalFile" type="file"
+        accept="image/*,application/pdf" required>
+    </div>
+
+    <div class="note">
+      Both receipts must belong to the same transaction.
+      Upload clear images showing amount, approval code,
+      date and time. Maximum 5 MB per file.
+    </div>
+
+    <button id="scanButton" type="submit">
+      SCAN BOTH RECEIPTS
+    </button>
+
+  </form>
+
+  <div class="progress">
+    <div id="progressBar"></div>
+  </div>
+
+  <div id="message" aria-live="polite"></div>
+
+</div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const form = document.getElementById("auditForm");
+  const button = document.getElementById("scanButton");
+  const message = document.getElementById("message");
+  const progressBar = document.getElementById("progressBar");
+
+  function showMessage(text) {
+    message.textContent = text;
+  }
+
+  function progress(value) {
+    progressBar.style.width = value + "%";
+  }
+
+  async function makeImage(file) {
+    if (file.type === "application/pdf") {
+      const pdf = await pdfjsLib.getDocument({
+        data: await file.arrayBuffer()
+      }).promise;
+
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({
+        canvasContext: canvas.getContext("2d"),
+        viewport: viewport
+      }).promise;
+
+      return canvas;
+    }
+
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      const url = URL.createObjectURL(file);
+
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(image);
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Cannot read image file."));
+      };
+
+      image.src = url;
+    });
+  }
+
+  async function scanReceipt(file, label) {
+    showMessage("Preparing " + label + "...");
+
+    const image = await makeImage(file);
+
+    const worker = await Tesseract.createWorker("eng", 1, {
+      logger: info => {
+        if (info.status) {
+          showMessage(
+            label + ": " + info.status +
+            (info.progress !== undefined
+              ? " " + Math.round(info.progress * 100) + "%"
+              : "")
+          );
+        }
+      }
+    });
+
+    try {
+      const result = await worker.recognize(image);
+      return result.data.text || "";
+    } finally {
+      await worker.terminate();
+    }
+  }
+
+  function findAmount(text) {
+    const lines = text.split(/\r?\n/);
+
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (/total|amount|purchase/i.test(lines[i])) {
+        const matches = lines[i].match(
+          /(?:PHP|₱|P)\s*[\d,]+\.\d{2}|[\d,]+\.\d{2}/gi
+        ) || [];
+
+        if (matches.length) {
+          return Number(
+            matches[matches.length - 1].replace(/[^\d.]/g, "")
+          ).toFixed(2);
+        }
+      }
+    }
+
+    return "";
+  }
+
+  function findApproval(text) {
+    const patterns = [
+      /APPR\.?\s*CODE\s*[:#-]?\s*([A-Z0-9]{4,})/i,
+      /APPROVAL\s*(?:CODE|NO\.?|NUMBER)?\s*[:#-]?\s*([A-Z0-9]{4,})/i,
+      /AUTH(?:ORIZATION)?\s*(?:CODE|NO\.?)?\s*[:#-]?\s*([A-Z0-9]{4,})/i
+    ];
+
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (match) return match[1].toUpperCase();
+    }
+
+    return "";
+  }
+
+  function findDateTime(text) {
+    const dateMatch =
+      text.match(/\b20\d{2}[/-]\d{1,2}[/-]\d{1,2}\b/) ||
+      text.match(/\b\d{1,2}[/-]\d{1,2}[/-]20\d{2}\b/);
+
+    const timeMatch = text.match(
+      /\b(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?\s*(?:AM|PM)?\b/i
+    );
+
+    let date = "";
+
+    if (dateMatch) {
+      const value = dateMatch[0];
+      let parts;
+
+      if (/^20/.test(value)) {
+        parts = value.split(/[/-]/);
+      } else {
+        const p = value.split(/[/-]/);
+        parts = [p[2], p[0], p[1]];
+      }
+
+      date = parts[0] + "-" +
+        String(parts[1]).padStart(2, "0") + "-" +
+        String(parts[2]).padStart(2, "0");
+    }
+
+    let time = timeMatch ? timeMatch[0].toUpperCase() : "";
+
+    return { date, time, display: [date, time].filter(Boolean).join(" ") };
+  }
+
+  function extract(text) {
+    return {
+      amount: findAmount(text),
+      approval: findApproval(text),
+      dateTime: findDateTime(text)
+    };
+  }
+
+  function compare(pos, terminal) {
+    if (
+      !pos.amount || !terminal.amount ||
+      !pos.approval || !terminal.approval ||
+      !pos.dateTime.date || !terminal.dateTime.date ||
+      !pos.dateTime.time || !terminal.dateTime.time
+    ) {
+      return "FOR MANUAL REVIEW";
+    }
+
+    if (
+      pos.amount !== terminal.amount ||
+      pos.approval !== terminal.approval ||
+      pos.dateTime.date !== terminal.dateTime.date ||
+      pos.dateTime.time !== terminal.dateTime.time
+    ) {
+      return "MISMATCH";
+    }
+
+    return "MATCH";
+  }
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const posFile = document.getElementById("posFile").files[0];
+    const terminalFile = document.getElementById("terminalFile").files[0];
+    const storeCode = document.getElementById("storeCode").value.trim();
+
+    if (!storeCode || !posFile || !terminalFile) {
+      showMessage("Please complete all fields.");
+      return;
+    }
+
+    for (const file of [posFile, terminalFile]) {
+      if (file.size > 5 * 1024 * 1024) {
+        showMessage("Each file must be 5 MB or smaller.");
+        return;
+      }
+    }
+
+    button.disabled = true;
+    button.textContent = "SCANNING...";
+    progress(5);
+
+    try {
+      const posText = await scanReceipt(posFile, "POS receipt");
+      progress(45);
+
+      const terminalText = await scanReceipt(
+        terminalFile, "Terminal receipt"
+      );
+      progress(85);
+
+      const pos = extract(posText);
+      const terminal = extract(terminalText);
+      const status = compare(pos, terminal);
+
+      progress(100);
+
+      message.innerHTML =
+        '<div class="result">' +
+        '<strong>OCR SCAN COMPLETED</strong><br><br>' +
+        'Store Code: ' + safe(storeCode) + '<br>' +
+        'Audit Status: <strong>' + safe(status) + '</strong><br><br>' +
+        '<strong>POS RECEIPT</strong><br>' +
+        'Amount: ' + safe(pos.amount || "Not detected") + '<br>' +
+        'Approval: ' + safe(pos.approval || "Not detected") + '<br>' +
+        'Date/Time: ' + safe(pos.dateTime.display || "Not detected") +
+        '<br><br><strong>TERMINAL RECEIPT</strong><br>' +
+        'Amount: ' + safe(terminal.amount || "Not detected") + '<br>' +
+        'Approval: ' + safe(terminal.approval || "Not detected") + '<br>' +
+        'Date/Time: ' + safe(terminal.dateTime.display || "Not detected") +
+        '<br><br><span class="small">' +
+        'OCR preview only. Drive and Sheets saving will be connected next.' +
+        '</span></div>';
+
+    } catch (error) {
+      showMessage("OCR error: " + error.message);
+    } finally {
+      button.disabled = false;
+      button.textContent = "SCAN BOTH RECEIPTS";
+    }
+  });
+
+  function safe(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+</script>
+</body>
+</html>
