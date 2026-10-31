@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -166,6 +165,18 @@
 </div>
 
 <script>
+  if (typeof Tesseract === "undefined") {
+    document.getElementById("message").textContent =
+      "Hindi ma-load ang Tesseract library. I-refresh ang page at subukan muli.";
+    throw new Error("Tesseract.js library failed to load.");
+  }
+
+  if (typeof pdfjsLib === "undefined") {
+    document.getElementById("message").textContent =
+      "Hindi ma-load ang PDF.js library. I-refresh ang page at subukan muli.";
+    throw new Error("PDF.js library failed to load.");
+  }
+
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -225,25 +236,48 @@
     showMessage("Preparing " + label + "...");
 
     const image = await makeImage(file);
-
-    const worker = await Tesseract.createWorker("eng", 1, {
-      logger: info => {
-        if (info.status) {
-          showMessage(
-            label + ": " + info.status +
-            (info.progress !== undefined
-              ? " " + Math.round(info.progress * 100) + "%"
-              : "")
-          );
-        }
-      }
-    });
+    let worker;
 
     try {
+      showMessage(label + ": Loading OCR engine...");
+
+      worker = await Tesseract.createWorker("eng", 1, {
+        workerPath:
+          "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
+
+        langPath:
+          "https://tessdata.projectnaptha.com/4.0.0",
+
+        corePath:
+          "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1",
+
+        logger: info => {
+          if (info.status) {
+            showMessage(
+              label + ": " + info.status +
+              (info.progress !== undefined
+                ? " " + Math.round(info.progress * 100) + "%"
+                : "")
+            );
+          }
+        }
+      });
+
       const result = await worker.recognize(image);
       return result.data.text || "";
+
+    } catch (error) {
+      console.error("Tesseract OCR error:", error);
+
+      throw new Error(
+        "Hindi ma-load ang OCR files. I-check ang internet connection, refresh ang page, at subukan muli. Details: " +
+        (error && error.message ? error.message : String(error))
+      );
+
     } finally {
-      await worker.terminate();
+      if (worker) {
+        await worker.terminate();
+      }
     }
   }
 
@@ -311,7 +345,11 @@
 
     let time = timeMatch ? timeMatch[0].toUpperCase() : "";
 
-    return { date, time, display: [date, time].filter(Boolean).join(" ") };
+    return {
+      date,
+      time,
+      display: [date, time].filter(Boolean).join(" ")
+    };
   }
 
   function extract(text) {
@@ -372,8 +410,10 @@
       progress(45);
 
       const terminalText = await scanReceipt(
-        terminalFile, "Terminal receipt"
+        terminalFile,
+        "Terminal receipt"
       );
+
       progress(85);
 
       const pos = extract(posText);
@@ -401,6 +441,7 @@
 
     } catch (error) {
       showMessage("OCR error: " + error.message);
+
     } finally {
       button.disabled = false;
       button.textContent = "SCAN BOTH RECEIPTS";
