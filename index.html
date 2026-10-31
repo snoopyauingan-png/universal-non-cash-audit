@@ -8,16 +8,19 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#17243a}
-.container{max-width:440px;margin:55px auto;padding:28px;background:white;border-radius:15px;box-shadow:0 5px 25px #0001}
+.container{max-width:460px;margin:35px auto;padding:25px;background:white;border-radius:15px;box-shadow:0 5px 25px #0001}
 h1{text-align:center;font-size:23px}
-.subtitle{text-align:center;color:#718096;font-size:13px;margin-bottom:25px}
+.subtitle{text-align:center;color:#718096;font-size:13px;margin-bottom:20px}
 input,select{width:100%;padding:12px;margin:7px 0;border:1px solid #dce3ed;border-radius:8px;font-size:15px}
 button{padding:12px 16px;border:0;border-radius:8px;background:#153e75;color:white;font-weight:bold;cursor:pointer}
 button:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:not-allowed}
 .full{width:100%;margin-top:10px}
 .secondary{background:#e8eef7;color:#153e75}
-#message{margin-top:14px;text-align:center;font-size:13px;color:#c0392b}
-#dashboard{display:none;max-width:1050px;margin:25px auto;padding:20px}
+.danger{background:#a93226}
+.success{background:#237a3b}
+#message,#registerMessage{margin-top:14px;text-align:center;font-size:13px;color:#c0392b}
+#dashboard,#managerDashboard{display:none;max-width:1050px;margin:25px auto;padding:20px}
 .header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .header button{width:auto}
 .welcome{background:#153e75;color:white;padding:22px;border-radius:13px;margin:20px 0}
@@ -27,11 +30,12 @@ button:hover{opacity:.9}
 .card h3{font-size:14px;color:#718096}
 .number{font-size:28px;font-weight:bold}
 .company{border:1px solid #e1e7ef;border-radius:9px;padding:15px;margin-top:10px}
-.status{font-size:12px;padding:5px 9px;border-radius:20px;background:#e5f5e9;color:#237a3b}
 .small{font-size:12px;color:#718096}
-#companyMessage,#storeMessage{font-size:13px;margin-top:12px}
-.store-row{padding:12px;border-bottom:1px solid #e5eaf0}
+.store-row,.request-row{padding:13px;border-bottom:1px solid #e5eaf0}
 .store-row strong{display:inline-block;min-width:55px}
+.request-row button{margin:5px 5px 0 0}
+.status{font-size:12px;font-weight:bold;padding:5px 9px;border-radius:20px;background:#fff2cc;color:#8a6500}
+.hidden{display:none}
 </style>
 </head>
 <body>
@@ -40,11 +44,56 @@ button:hover{opacity:.9}
   <div style="text-align:center;font-size:42px">📊</div>
   <h1>UNIVERSAL NON-CASH AUDIT</h1>
   <div class="subtitle">Transaction Verification & Reconciliation System</div>
+
+  <h3>Account Login</h3>
   <input id="email" type="email" placeholder="Email Address">
   <input id="password" type="password" placeholder="Password">
   <button class="full" onclick="login()">LOGIN</button>
-  <button class="full secondary" onclick="register()">CREATE ACCOUNT</button>
+  <button class="full secondary" onclick="showRegistration()">STORE MANAGER REGISTRATION</button>
   <div id="message"></div>
+</div>
+
+<div class="container hidden" id="registerBox">
+  <h2>🏬 Store Manager Registration</h2>
+  <p class="small">For Jollibee Store Managers only. Your account requires Super Admin approval.</p>
+
+  <input id="managerName" placeholder="Full Name">
+  <input id="managerEmail" type="email" placeholder="Email Address">
+  <input id="managerPassword" type="password" placeholder="Create Password (minimum 6 characters)">
+
+  <select id="managerStore">
+    <option value="">Select Assigned Jollibee Store</option>
+    <option value="792">792 - SM Muntinlupa</option>
+    <option value="797">797 - Madrigal</option>
+    <option value="1172">1172 - New SM Southmall</option>
+    <option value="652">652 - New LP</option>
+    <option value="880">880 - SM Super Center LP</option>
+    <option value="60">60 - Zapote</option>
+    <option value="749">749 - Shopwise Sucat</option>
+    <option value="1059">1059 - Olivarez Sucat</option>
+    <option value="945">945 - Paranaque City Hall</option>
+    <option value="476">476 - SM Sucat</option>
+    <option value="602">602 - Sucat Road</option>
+  </select>
+
+  <button class="full" id="registerButton" onclick="registerManager()">SUBMIT REGISTRATION</button>
+  <button class="full secondary" onclick="showLogin()">BACK TO LOGIN</button>
+  <div id="registerMessage"></div>
+</div>
+
+<div class="container hidden" id="pendingBox">
+  <div style="text-align:center;font-size:42px">⏳</div>
+  <h2 style="text-align:center">Registration Pending</h2>
+  <p style="text-align:center">Your Store Manager registration has been submitted.</p>
+  <p style="text-align:center">Please wait for Super Admin approval before accessing the audit system.</p>
+  <button class="full secondary" onclick="logout()">LOGOUT</button>
+</div>
+
+<div class="container hidden" id="rejectedBox">
+  <div style="text-align:center;font-size:42px">❌</div>
+  <h2 style="text-align:center">Registration Not Approved</h2>
+  <p style="text-align:center">Your registration was not approved. Please contact the system administrator.</p>
+  <button class="full secondary" onclick="logout()">LOGOUT</button>
 </div>
 
 <div id="dashboard">
@@ -59,7 +108,7 @@ button:hover{opacity:.9}
   <div class="welcome">
     <h2>Welcome, System Owner!</h2>
     <p id="userEmail"></p>
-    <p>Manage your registered companies and branches.</p>
+    <p>Manage your registered companies, branches and manager requests.</p>
   </div>
 
   <div class="cards">
@@ -75,6 +124,16 @@ button:hover{opacity:.9}
       <h3>JOLLIBEE STORES</h3>
       <div class="number" id="storeCount">0</div>
     </div>
+    <div class="card">
+      <h3>PENDING MANAGER REQUESTS</h3>
+      <div class="number" id="pendingCount">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>👤 Store Manager Approval</h2>
+    <p class="small">Review registration requests before granting branch access.</p>
+    <div id="requestList">Loading requests...</div>
   </div>
 
   <div class="card">
@@ -110,6 +169,29 @@ button:hover{opacity:.9}
   </div>
 </div>
 
+<div id="managerDashboard">
+  <div class="header">
+    <div>
+      <h2>UNIVERSAL NON-CASH AUDIT</h2>
+      <small>STORE MANAGER PORTAL</small>
+    </div>
+    <button onclick="logout()">LOGOUT</button>
+  </div>
+
+  <div class="welcome">
+    <h2>Welcome, Store Manager!</h2>
+    <p id="managerWelcome"></p>
+    <p id="managerStoreName"></p>
+    <p><span class="status">APPROVED</span></p>
+  </div>
+
+  <div class="card">
+    <h2>📋 Branch Audit Workspace</h2>
+    <p>Your account is assigned to this Jollibee branch only.</p>
+    <p class="small">The receipt scanning and transaction audit module will be added in a later step.</p>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -133,6 +215,8 @@ const db = firebase.firestore();
 const SUPER_ADMIN_UID = "UPE192w6H5ekHSv0hQKjHITqsZ62";
 const JOLLIBEE_COMPANY_ID = "OU8L0pf9g3zYGfCk2DHt";
 
+let registrationInProgress = false;
+
 const jollibeeStores = [
   {code:"792",province:"Muntinlupa",name:"SM Muntinlupa"},
   {code:"797",province:"Muntinlupa",name:"Madrigal"},
@@ -147,6 +231,33 @@ const jollibeeStores = [
   {code:"602",province:"Paranaque",name:"Sucat Road"}
 ];
 
+function hideAll(){
+  ["loginBox","registerBox","pendingBox","rejectedBox",
+   "dashboard","managerDashboard"].forEach(id=>{
+    document.getElementById(id).style.display="none";
+  });
+}
+
+function showLogin(){
+  hideAll();
+  document.getElementById("loginBox").style.display="block";
+}
+
+function showRegistration(){
+  hideAll();
+  document.getElementById("registerBox").style.display="block";
+}
+
+function showMessage(message){
+  document.getElementById("message").textContent=message;
+}
+
+function showRegisterMessage(message,color){
+  const el=document.getElementById("registerMessage");
+  el.textContent=message;
+  el.style.color=color||"#c0392b";
+}
+
 function isSuperAdmin(){
   return auth.currentUser &&
     auth.currentUser.uid === SUPER_ADMIN_UID;
@@ -155,66 +266,132 @@ function isSuperAdmin(){
 function login(){
   const email=document.getElementById("email").value.trim();
   const password=document.getElementById("password").value;
+
   if(!email || !password){
     showMessage("Please enter your email and password.");
     return;
   }
+
   auth.signInWithEmailAndPassword(email,password)
     .catch(e=>showMessage(e.message));
 }
 
-function register(){
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value;
-  if(!email || !password){
-    showMessage("Enter email and password first.");
+async function registerManager(){
+  const name=document.getElementById("managerName").value.trim();
+  const email=document.getElementById("managerEmail").value.trim();
+  const password=document.getElementById("managerPassword").value;
+  const storeId=document.getElementById("managerStore").value;
+  const button=document.getElementById("registerButton");
+
+  if(!name || !email || !password || !storeId){
+    showRegisterMessage("Please complete all registration fields.");
     return;
   }
+
   if(password.length<6){
-    showMessage("Password must have at least 6 characters.");
+    showRegisterMessage("Password must have at least 6 characters.");
     return;
   }
-  auth.createUserWithEmailAndPassword(email,password)
-    .catch(e=>showMessage(e.message));
+
+  button.disabled=true;
+  button.textContent="SUBMITTING...";
+  registrationInProgress=true;
+
+  try{
+    const credential=await auth.createUserWithEmailAndPassword(email,password);
+    const user=credential.user;
+
+    const selectedStore=jollibeeStores.find(s=>s.code===storeId);
+
+    await db.collection("managerRequests").doc(user.uid).set({
+      fullName:name,
+      email:email,
+      role:"STORE_MANAGER",
+      companyId:JOLLIBEE_COMPANY_ID,
+      storeId:storeId,
+      storeName:selectedStore.name,
+      status:"PENDING",
+      requestedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    registrationInProgress=false;
+    showRegisterMessage("Registration submitted. Waiting for Super Admin approval.","#237a3b");
+    hideAll();
+    document.getElementById("pendingBox").style.display="block";
+
+  }catch(e){
+    registrationInProgress=false;
+    showRegisterMessage("Registration failed: "+e.message);
+    if(auth.currentUser) await auth.signOut();
+  }finally{
+    button.disabled=false;
+    button.textContent="SUBMIT REGISTRATION";
+  }
 }
 
-function logout(){auth.signOut();}
-
-function showMessage(message){
-  document.getElementById("message").textContent=message;
+function logout(){
+  auth.signOut();
 }
 
-function showCompanyMessage(message,color){
-  const el=document.getElementById("companyMessage");
-  el.textContent=message;
-  el.style.color=color||"#c0392b";
-}
+auth.onAuthStateChanged(async user=>{
+  if(registrationInProgress) return;
 
-function showStoreMessage(message,color){
-  const el=document.getElementById("storeMessage");
-  el.textContent=message;
-  el.style.color=color||"#c0392b";
-}
-
-auth.onAuthStateChanged(user=>{
   if(!user){
-    document.getElementById("loginBox").style.display="block";
-    document.getElementById("dashboard").style.display="none";
+    showLogin();
     return;
   }
 
-  if(user.uid!==SUPER_ADMIN_UID){
-    showMessage("This account is not authorized as SUPER ADMIN.");
-    auth.signOut();
+  if(user.uid===SUPER_ADMIN_UID){
+    hideAll();
+    document.getElementById("dashboard").style.display="block";
+    document.getElementById("userEmail").textContent=user.email||"";
+    loadCompanies();
+    loadJollibeeStores();
+    loadManagerRequests();
     return;
   }
 
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("dashboard").style.display="block";
-  document.getElementById("userEmail").textContent=user.email;
+  try{
+    const requestDoc=await db.collection("managerRequests").doc(user.uid).get();
 
-  loadCompanies();
-  loadJollibeeStores();
+    if(!requestDoc.exists){
+      showMessage("No manager registration found for this account.");
+      await auth.signOut();
+      return;
+    }
+
+    const request=requestDoc.data();
+
+    if(request.status==="PENDING"){
+      hideAll();
+      document.getElementById("pendingBox").style.display="block";
+      return;
+    }
+
+    if(request.status==="REJECTED"){
+      hideAll();
+      document.getElementById("rejectedBox").style.display="block";
+      return;
+    }
+
+    if(request.status!=="APPROVED" ||
+       request.role!=="STORE_MANAGER" ||
+       request.companyId!==JOLLIBEE_COMPANY_ID){
+      await auth.signOut();
+      return;
+    }
+
+    hideAll();
+    document.getElementById("managerDashboard").style.display="block";
+    document.getElementById("managerWelcome").textContent=
+      request.fullName+" | "+request.email;
+    document.getElementById("managerStoreName").textContent=
+      "Assigned Branch: "+request.storeId+" - "+(request.storeName||"Jollibee Store");
+
+  }catch(e){
+    showLogin();
+    showMessage("Unable to verify account: "+e.message);
+  }
 });
 
 async function addCompany(){
@@ -223,14 +400,15 @@ async function addCompany(){
   const name=document.getElementById("companyName").value.trim();
   const code=document.getElementById("companyCode").value.trim().toUpperCase();
   const industry=document.getElementById("industry").value;
+  const message=document.getElementById("companyMessage");
 
   if(!name||!code||!industry){
-    showCompanyMessage("Complete all company fields.");
+    message.textContent="Complete all company fields.";
     return;
   }
 
   if(!/^[A-Z0-9_-]{2,20}$/.test(code)){
-    showCompanyMessage("Company code must be 2-20 letters or numbers.");
+    message.textContent="Company code must be 2-20 letters or numbers.";
     return;
   }
 
@@ -239,7 +417,7 @@ async function addCompany(){
       .where("companyCode","==",code).get();
 
     if(!existing.empty){
-      showCompanyMessage("Company code already exists.");
+      message.textContent="Company code already exists.";
       return;
     }
 
@@ -255,11 +433,12 @@ async function addCompany(){
     document.getElementById("companyName").value="";
     document.getElementById("companyCode").value="";
     document.getElementById("industry").value="";
-
-    showCompanyMessage("Company successfully registered!","#237a3b");
+    message.textContent="Company successfully registered!";
+    message.style.color="#237a3b";
     loadCompanies();
+
   }catch(e){
-    showCompanyMessage("Unable to save: "+e.message);
+    message.textContent="Unable to save: "+e.message;
   }
 }
 
@@ -304,10 +483,7 @@ async function loadCompanies(){
 }
 
 async function importJollibeeStores(){
-  if(!isSuperAdmin()){
-    showStoreMessage("Unauthorized account.");
-    return;
-  }
+  if(!isSuperAdmin()) return;
 
   const button=document.querySelector(
     'button[onclick="importJollibeeStores()"]'
@@ -316,24 +492,18 @@ async function importJollibeeStores(){
   button.textContent="IMPORTING...";
 
   try{
-    const companyRef=db.collection("companies")
-      .doc(JOLLIBEE_COMPANY_ID);
-
+    const companyRef=db.collection("companies").doc(JOLLIBEE_COMPANY_ID);
     const companyDoc=await companyRef.get();
 
-    if(!companyDoc.exists){
+    if(!companyDoc.exists ||
+       companyDoc.data().companyCode!=="JFC-JOLLIBEE"){
       throw new Error("Jollibee company record was not found.");
-    }
-
-    if(companyDoc.data().companyCode!=="JFC-JOLLIBEE"){
-      throw new Error("Company ID does not match Jollibee.");
     }
 
     const batch=db.batch();
 
     jollibeeStores.forEach(store=>{
       const storeRef=companyRef.collection("stores").doc(store.code);
-
       batch.set(storeRef,{
         storeCode:store.code,
         storeName:store.name,
@@ -348,11 +518,13 @@ async function importJollibeeStores(){
 
     await batch.commit();
 
-    showStoreMessage("Successfully imported 11 Jollibee stores!","#237a3b");
+    document.getElementById("storeMessage").textContent=
+      "Successfully imported 11 Jollibee stores!";
     loadJollibeeStores();
 
   }catch(e){
-    showStoreMessage("Import failed: "+e.message);
+    document.getElementById("storeMessage").textContent=
+      "Import failed: "+e.message;
   }finally{
     button.disabled=false;
     button.textContent="IMPORT 11 JOLLIBEE STORES";
@@ -368,14 +540,12 @@ async function loadJollibeeStores(){
   try{
     const snapshot=await db.collection("companies")
       .doc(JOLLIBEE_COMPANY_ID)
-      .collection("stores")
-      .get();
+      .collection("stores").get();
 
     list.innerHTML="";
 
     snapshot.forEach(doc=>{
       const s=doc.data();
-
       const row=document.createElement("div");
       row.className="store-row";
 
@@ -396,11 +566,89 @@ async function loadJollibeeStores(){
     });
 
     if(snapshot.empty) list.textContent="No Jollibee stores imported yet.";
-
     document.getElementById("storeCount").textContent=snapshot.size;
 
   }catch(e){
     list.textContent="Unable to load stores: "+e.message;
+  }
+}
+
+async function loadManagerRequests(){
+  if(!isSuperAdmin()) return;
+
+  const list=document.getElementById("requestList");
+  list.textContent="Loading requests...";
+
+  try{
+    const snapshot=await db.collection("managerRequests").get();
+    list.innerHTML="";
+    let pending=0;
+
+    snapshot.forEach(doc=>{
+      const r=doc.data();
+
+      if(r.status==="PENDING") pending++;
+
+      const row=document.createElement("div");
+      row.className="request-row";
+
+      const title=document.createElement("strong");
+      title.textContent=r.fullName||"Unnamed Manager";
+
+      const detail=document.createElement("p");
+      detail.className="small";
+      detail.textContent=(r.email||"")+
+        " | Store: "+(r.storeId||"")+
+        " - "+(r.storeName||"")+
+        " | Status: "+(r.status||"UNKNOWN");
+
+      row.appendChild(title);
+      row.appendChild(detail);
+
+      if(r.status==="PENDING"){
+        const approve=document.createElement("button");
+        approve.className="success";
+        approve.textContent="APPROVE";
+        approve.onclick=()=>reviewManagerRequest(doc.id,"APPROVED");
+
+        const reject=document.createElement("button");
+        reject.className="danger";
+        reject.textContent="REJECT";
+        reject.onclick=()=>reviewManagerRequest(doc.id,"REJECTED");
+
+        row.appendChild(approve);
+        row.appendChild(reject);
+      }
+
+      list.appendChild(row);
+    });
+
+    if(snapshot.empty) list.textContent="No manager registration requests yet.";
+    document.getElementById("pendingCount").textContent=pending;
+
+  }catch(e){
+    list.textContent="Unable to load requests: "+e.message;
+  }
+}
+
+async function reviewManagerRequest(userId,newStatus){
+  if(!isSuperAdmin()) return;
+
+  const action=newStatus==="APPROVED"?"approve":"reject";
+  if(!confirm("Are you sure you want to "+action+" this Store Manager?")) return;
+
+  try{
+    await db.collection("managerRequests").doc(userId).update({
+      status:newStatus,
+      reviewedBy:auth.currentUser.uid,
+      reviewedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Manager request "+newStatus+".");
+    loadManagerRequests();
+
+  }catch(e){
+    alert("Unable to update request: "+e.message);
   }
 }
 </script>
